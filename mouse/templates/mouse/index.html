@@ -1,0 +1,103 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mouse Test</title>
+</head>
+<body>
+    <div id="main">
+        <div id="mouses"></div>
+    </div>
+
+    <script>
+        let mainDiv = document.getElementById('#mouses');
+        let numOfUsers = 0;
+
+        const mouseSocket = new WebSocket(
+            'ws://'
+            + window.location.host
+            + '/ws/mouse/'
+        )
+
+        mouseSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            // console.log(data);
+            if (numOfUsers < data.num_of_users) {  // a new user joined
+                let i;
+                for (i=numOfUsers+1; i<=data.num_of_users; i++) {
+                    let img = document.createElement('img');
+                    img.setAttribute('id', 'cursor' + i);
+                    img.setAttribute('src', "{% static 'cursor.png' %}");
+                    img.setAttribute('alt', 'cursor' + i);
+                    img.setAttribute('width', '30px');
+                    img.style.position = 'fixed';
+                    img.style.filter = 'hue-rotate(' + (i-1) * 30 * Math.PI + 'deg)';
+                    document.getElementById('mouses').appendChild(img);
+                }
+
+                // update numOfUsers
+                numOfUsers = data.num_of_users;
+            }
+
+            let cursor = document.getElementById('cursor' + data.user_id);
+            if (numOfUsers < data.num_of_users) {  // a user left
+                numOfUsers = data.num_of_users;
+                cursor.parentNode.removeChild(cursor);
+            }
+
+            cursor.style.top = 100 * data.posY  + '%';
+            cursor.style.left = 100 * data.posX + '%';
+            // console.log(cursor.style.top, cursor.style.left);
+        };
+
+        mouseSocket.onclose = function(e) {
+            console.error('Mouse socket closed unexpectedly');
+        };
+
+        var bufferMousePos = null;
+        document.onmousemove = function (e) {
+            // only for old IE
+            /*var eventDoc, doc, body;
+
+            event = event || window.event; // IE-ism
+
+            // If pageX/Y aren't available and clientX/Y are,
+            // calculate pageX/Y - logic taken from jQuery.
+            // (This is to support old IE)
+            if (event.pageX == null && event.clientX != null) {
+                eventDoc = (event.target && event.target.ownerDocument) || document;
+                doc = eventDoc.documentElement;
+                body = eventDoc.body;
+
+                event.pageX = event.clientX +
+                  (doc && doc.scrollLeft || body && body.scrollLeft || 0) -
+                  (doc && doc.clientLeft || body && body.clientLeft || 0);
+                event.pageY = event.clientY +
+                  (doc && doc.scrollTop  || body && body.scrollTop  || 0) -
+                  (doc && doc.clientTop  || body && body.clientTop  || 0 );
+            }*/
+
+            const width  = window.innerWidth || document.documentElement.clientWidth ||
+            document.body.clientWidth;
+            const height = window.innerHeight|| document.documentElement.clientHeight||
+            document.body.clientHeight;
+
+            bufferMousePos = [e.pageX / width, e.pageY / height]
+        }
+
+        !function send() {
+        if (bufferMousePos) {
+            mouseSocket.send(JSON.stringify({
+                'posX': bufferMousePos[0],
+                'posY': bufferMousePos[1]
+            }));
+            bufferMousePos = null;
+        }
+        setTimeout(send, 100);
+    }();
+
+    </script>
+</body>
+</html>
