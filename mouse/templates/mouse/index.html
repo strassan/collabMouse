@@ -5,79 +5,103 @@
 <head>
     <meta charset="UTF-8">
     <title>Mouse Test</title>
+	
+	<style>
+		html, body {
+		  width:  100%;
+		  height: 100%;
+		  margin: 0;
+		}
+	</style>
 </head>
 <body>
-    <div id="main">
-        <div id="mouses"></div>
-    </div>
+	<div id="mouses"></div>
+	<canvas id="mouseCanv"></canvas>
 
     <script>
         let mainDiv = document.getElementById('#mouses');
-        let numOfUsers = 0;
+		let users = new Set([]);
+		
+		
+		let drawing = false;
+		let c = document.getElementById("mouseCanv");
+		let ctx = c.getContext("2d");
+		
+		
+		c.width = window.innerWidth;
+		c.height = window.innerHeight;
 
-        const mouseSocket = new WebSocket(
-            'ws://'
-            + window.location.host
-            + '/ws/mouse/'
-        )
+        let bufferMousePos = [0, 0];
+		let lastBMP = [0, 0];
+		
+		let noServer = false;
+		let myTestID = 3;
 
-        mouseSocket.onmessage = function(e) {
+        let mouseSocket = null;
+
+		if (!noServer) {
+			mouseSocket = new WebSocket(
+				'ws://'
+				+ window.location.host
+				+ '/ws/mouse/'
+			)
+			
+
+			mouseSocket.onmessage = parseMsg;
+			
+			mouseSocket.onclose = function(e) {
+				console.error('Mouse socket closed unexpectedly');
+			};
+		}
+		
+		let parseMsg = function(e) {
             const data = JSON.parse(e.data);
-            // console.log(data);
-            if (numOfUsers < data.num_of_users) {  // a new user joined
-                let i;
-                for (i=numOfUsers+1; i<=data.num_of_users; i++) {
-                    let img = document.createElement('img');
-                    img.setAttribute('id', 'cursor' + i);
-                    img.setAttribute('src', "{% static 'cursor.png' %}");
-                    img.setAttribute('alt', 'cursor' + i);
-                    img.setAttribute('width', '30px');
-                    img.style.position = 'fixed';
-                    img.style.filter = 'hue-rotate(' + (i-1) * 30 * Math.PI + 'deg)';
-                    document.getElementById('mouses').appendChild(img);
-                }
+			
+			if (data.evtType == "mousemoved") {
+				if (!users.has(data.userID)) {  // a new user joined
+				
+					let img = document.createElement('img');
+					img.setAttribute('id', 'cursor' + data.userID);
+					img.setAttribute('src', "{% static 'cursor.png' %}");
+					img.setAttribute('alt', 'cursor' + data.userID);
+					img.setAttribute('width', '30px');
+					img.style.position = 'fixed';
+					img.style.filter = 'hue-rotate(' + data.userID * 30 * Math.PI + 'deg)';
+					img.ondragstart = function() { return false; };
+					document.getElementById('mouses').appendChild(img);
+					
+					users.add(data.userID);
+				}
 
-                // update numOfUsers
-                numOfUsers = data.num_of_users;
-            }
+				let cursor = document.getElementById('cursor' + data.userID);
+				
+				// TODO User leave message
 
-            let cursor = document.getElementById('cursor' + data.user_id);
-            if (numOfUsers < data.num_of_users) {  // a user left
-                numOfUsers = data.num_of_users;
-                cursor.parentNode.removeChild(cursor);
-            }
-
-            cursor.style.top = 100 * data.posY  + '%';
-            cursor.style.left = 100 * data.posX + '%';
-            // console.log(cursor.style.top, cursor.style.left);
+				cursor.style.top = 100 * data.posY  + '%';
+				cursor.style.left = 100 * data.posX + '%';
+				
+			} else if (data.evtType == "drawsegment") {
+			
+				const width  = window.innerWidth || document.documentElement.clientWidth ||
+				document.body.clientWidth;
+				const height = window.innerHeight|| document.documentElement.clientHeight||
+				document.body.clientHeight;
+			
+				ctx.beginPath();
+				ctx.moveTo(data.startX*width, data.startY*height);
+				ctx.lineTo(data.endX*width, data.endY*height);
+				ctx.lineWidth = 6;
+				ctx.strokeStyle = 'hsl('+ data.userID * 30 * Math.PI + ', 100%, 50%)';
+				ctx.stroke();
+				
+			} else if (data.evtType == "clearall") {
+			
+				
+			}
+            
         };
 
-        mouseSocket.onclose = function(e) {
-            console.error('Mouse socket closed unexpectedly');
-        };
-
-        var bufferMousePos = null;
         document.onmousemove = function (e) {
-            // only for old IE
-            /*var eventDoc, doc, body;
-
-            event = event || window.event; // IE-ism
-
-            // If pageX/Y aren't available and clientX/Y are,
-            // calculate pageX/Y - logic taken from jQuery.
-            // (This is to support old IE)
-            if (event.pageX == null && event.clientX != null) {
-                eventDoc = (event.target && event.target.ownerDocument) || document;
-                doc = eventDoc.documentElement;
-                body = eventDoc.body;
-
-                event.pageX = event.clientX +
-                  (doc && doc.scrollLeft || body && body.scrollLeft || 0) -
-                  (doc && doc.clientLeft || body && body.clientLeft || 0);
-                event.pageY = event.clientY +
-                  (doc && doc.scrollTop  || body && body.scrollTop  || 0) -
-                  (doc && doc.clientTop  || body && body.clientTop  || 0 );
-            }*/
 
             const width  = window.innerWidth || document.documentElement.clientWidth ||
             document.body.clientWidth;
@@ -86,17 +110,77 @@
 
             bufferMousePos = [e.pageX / width, e.pageY / height]
         }
+		
+		
+		document.onmousedown = function(e) {
+			drawing = true;
+		}
+		
+		document.onmouseup = function(e) {
+			drawing = false;
+		}
+		
+		document.onclick = function(e) {
+			drawing = false;
+		}
+		
+		
+        window.addEventListener('resize', (e) => {
+			c.width = window.innerWidth;
+            c.height = window.innerHeight;
+		}, false);
+		
 
-        !function send() {
-        if (bufferMousePos) {
-            mouseSocket.send(JSON.stringify({
-                'posX': bufferMousePos[0],
-                'posY': bufferMousePos[1]
-            }));
-            bufferMousePos = null;
+        tickFunc = function(a) {
+		
+			if (drawing) {
+			
+				if (noServer) {
+				
+					parseMsg({
+						'data': JSON.stringify({
+							'evtType': 'drawsegment',
+							'userID': myTestID,
+							'startX': lastBMP[0],
+							'startY': lastBMP[1],
+							'endX': bufferMousePos[0],
+							'endY': bufferMousePos[1]
+						})
+					});
+				
+				} else {
+					// TODO send
+				}
+			}
+			
+			
+			
+			
+			if (noServer) {
+			
+				parseMsg({
+					'data': JSON.stringify({
+						'evtType': 'mousemoved',
+						'userID': myTestID,
+						'posX': bufferMousePos[0],
+						'posY': bufferMousePos[1]
+					})
+				});
+			
+			} else {
+				mouseSocket.send(JSON.stringify({
+					'evtType': 'mousepos',
+					'posX': bufferMousePos[0],
+					'posY': bufferMousePos[1]
+				}));
+			}
+			
+		
+			lastBMP = bufferMousePos;
+
         }
-        setTimeout(send, 100);
-    }();
+		
+        setInterval(tickFunc, 100);
 
     </script>
 </body>
