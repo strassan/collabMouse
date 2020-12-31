@@ -66,6 +66,15 @@ class MouseConsumer(WebsocketConsumer):
         else:
             setattr(self.channel_layer, self.group_name + '_users', connected_users)
 
+        # send delmouse to delete the cursor of this consumer
+        async_to_sync(self.channel_layer.group_send)(
+            self.group_name,
+            {
+                'type': 'delmouse_type',
+                'userID': self.user_id,
+            }
+        )
+
         # Leave room group
         async_to_sync(self.channel_layer.group_discard)(
             self.group_name,
@@ -191,6 +200,13 @@ class MouseConsumer(WebsocketConsumer):
     def dumpsegments_type(self, event):
         json_dump = deepcopy(event)
         json_dump['evtType'] = 'dumpsegments'
+        json_dump.pop('type', None)
+
+        self.send(text_data=json.dumps(json_dump))
+
+    def delmouse_type(self, event):
+        json_dump = deepcopy(event)
+        json_dump['evtType'] = 'delmouse'
         json_dump.pop('type', None)
 
         self.send(text_data=json.dumps(json_dump))
