@@ -15,6 +15,7 @@
 	</style>
 </head>
 <body>
+	<p>segments received = </p><p id="segs">0</p>
 	<div id="mouses"></div>
 	<canvas id="mouseCanv"></canvas>
 
@@ -35,6 +36,8 @@
 		
 		let noServer = false;
 		let myTestID = 3;
+		
+		let segs = 0;
 
         let mouseSocket = null;
 		
@@ -77,6 +80,10 @@
 				ctx.lineWidth = 6;
 				ctx.strokeStyle = 'hsl('+ data.userID * 30 * Math.PI + ', 100%, 50%)';
 				ctx.stroke();
+				
+				segs++;
+				document.getElementById('segs').innerHTML = segs;
+				
 				
 			} else if (data.evtType == "clearall") {
 			
