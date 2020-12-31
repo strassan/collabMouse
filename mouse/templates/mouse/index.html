@@ -29,7 +29,7 @@
 			-->
 		}
 		
-		p, #mouses, canvas {
+		#overlay, #mouses, canvas {
 			margin: 0;
 			padding: 0;
 			position: absolute; top: 0; left: 0;
@@ -42,7 +42,10 @@
 </head>
 <body>
 	<div id="container">
-		<p id="segs">segments received = 0</p>
+		<div id="overlay">
+			<p id="segs">segments received = 0</p><br>
+			<button id="clearBtn">Clear all</button>
+		</div>
 		<div id="mouses"></div>
 		<canvas id="mouseCanv"></canvas>
 	</div>
@@ -81,6 +84,7 @@
 					img.setAttribute('alt', 'cursor' + data.userID);
 					img.setAttribute('width', '30px');
 					img.style.position = 'fixed';
+					img.style.zIndex = '-5';
 					img.style.filter = 'hue-rotate(' + data.userID * 30 * Math.PI + 'deg)';
 					img.ondragstart = function() { return false; };
 					document.getElementById('mouses').appendChild(img);
@@ -114,7 +118,10 @@
 				
 				
 			} else if (data.evtType == "clearall") {
-				// TODO
+				c.width = window.innerWidth;
+				c.height = window.innerHeight;
+				segs = 0;
+				segsCounter.innerHTML = 'segments received = '+segs;
 				
 			} else if (data.evtType == "dumpsegments") {
 				var count = data.list.length;
@@ -143,6 +150,10 @@
 				segs = segs + count;
 				
 				segsCounter.innerHTML = 'segments received = '+segs;
+			} else if (data.evtType == "delmouse") {
+			
+				document.getElementById('cursor' + data.userID).remove();
+			
 			}
             
         };
@@ -190,6 +201,22 @@
 			c.width = window.innerWidth;
             c.height = window.innerHeight;
 		}, false);
+		
+		document.getElementById("clearBtn").addEventListener("click", (e) => {
+			if (noServer) {
+				
+				parseMsg({
+					'data': JSON.stringify({
+						'evtType': 'clearall'
+					})
+				});
+			
+			} else {
+				mouseSocket.send(JSON.stringify({
+					'evtType': 'clearall'
+				}));
+			}
+		});
 		
 
         tickFunc = function(a) {
