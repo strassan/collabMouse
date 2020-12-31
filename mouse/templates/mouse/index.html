@@ -7,17 +7,45 @@
     <title>Mouse Test</title>
 	
 	<style>
+	
 		html, body {
-		  width:  100%;
-		  height: 100%;
-		  margin: 0;
+			width:  100%;
+			height: 100%;
+			margin: 0;
+			padding: 0;
+		}
+		
+		
+		#container {
+			width: 100%;
+			height: 100%;
+			position: relative;
+			
+			margin: 0;
+			padding: 0;
+			
+			<!--
+			background-color: red;
+			-->
+		}
+		
+		p, #mouses, canvas {
+			margin: 0;
+			padding: 0;
+			position: absolute; top: 0; left: 0;
+		}
+		
+		canvas {
+			width: 100%; height: 100%; z-index: -10;
 		}
 	</style>
 </head>
 <body>
-	<p>segments received = </p><p id="segs">0</p>
-	<div id="mouses"></div>
-	<canvas id="mouseCanv"></canvas>
+	<div id="container">
+		<p id="segs">segments received = 0</p>
+		<div id="mouses"></div>
+		<canvas id="mouseCanv"></canvas>
+	</div>
 
     <script>
 		let users = new Set([]);
@@ -82,7 +110,7 @@
 				ctx.stroke();
 				
 				segs++;
-				document.getElementById('segs').innerHTML = segs;
+				document.getElementById('segs').innerHTML = 'segments received = '+segs;
 				
 				
 			} else if (data.evtType == "clearall") {
@@ -139,7 +167,8 @@
 
         tickFunc = function(a) {
 		
-			if (drawing) {
+			if (drawing && !(lastBMP == bufferMousePos)) {
+			//if (drawing) {
 			
 				if (noServer) {
 				
