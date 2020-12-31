@@ -114,8 +114,35 @@
 				
 				
 			} else if (data.evtType == "clearall") {
-			
+				// TODO
 				
+			} else if (data.evtType == "dumpsegments") {
+				var count = data.list.length;
+				var segsCounter = document.getElementById('segs');
+					
+				const width  = window.innerWidth || document.documentElement.clientWidth ||
+				document.body.clientWidth;
+				const height = window.innerHeight|| document.documentElement.clientHeight||
+				document.body.clientHeight;
+				
+				ctx.lineWidth = 6;
+				
+				var s = null;
+				
+				for (var i = 0; i < count; i++) {
+					s = data.list[i];
+					
+					ctx.strokeStyle = 'hsl('+ s.userID * 30 * Math.PI + ', 100%, 50%)';
+				
+					ctx.beginPath();
+					ctx.moveTo(s.startX*width, s.startY*height);
+					ctx.lineTo(s.endX*width, s.endY*height);
+					ctx.stroke();
+				}
+					
+				segs = segs + count;
+				
+				segsCounter.innerHTML = 'segments received = '+segs;
 			}
             
         };
