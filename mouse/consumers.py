@@ -42,7 +42,14 @@ class MouseConsumer(WebsocketConsumer):
             self.send_mousemoved(pos=user['last_mouse_pos'], user_id=user['userID'], group_name=self.user_group_name)
         # send all current segments
         segments = getattr(self.channel_layer, self.group_name + '_segments', [])
-        self.send_dumpsegments(segments)
+        segments_to_send = {}
+        for seg in segments:
+            segments_to_send['userID'] = seg['userID']
+            segments_to_send['startX'] = seg['nodes'][0][0]
+            segments_to_send['startY'] = seg['nodes'][0][1]
+            segments_to_send['endX'] = seg['nodes'][1][0]
+            segments_to_send['endY'] = seg['nodes'][1][1]
+        self.send_dumpsegments(segments_to_send)
 
         self.accept()
 
