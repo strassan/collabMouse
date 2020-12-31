@@ -30,14 +30,20 @@ class MouseConsumer(WebsocketConsumer):
             self.group_name,
             self.channel_name
         )
+        # join user group
+        self.user_group_name = self.group_name + '_user' + str(self.user_id)
+        async_to_sync(self.channel_layer.group_add)(
+            self.user_group_name,
+            self.channel_name
+        )
 
         # send all current users mouse positions
         for user in connected_users:
-            self.send_mousemoved(user['last_mouse_pos'], user['userID'])
+            self.send_mousemoved(pos=user['last_mouse_pos'], user_id=user['userID'], group_name=self.user_group_name)
         # send all current segments
         segments = getattr(self.channel_layer, self.group_name + '_segments', [])
         for seg in segments:
-            self.send_drawsegment(seg['nodes'], seg['userID'])
+            self.send_drawsegment(nodes=seg['nodes'], user_id=seg['userID'], group_name=self.user_group_name)
 
         self.accept()
 
@@ -101,12 +107,14 @@ class MouseConsumer(WebsocketConsumer):
         else:
             pass
 
-    def send_mousemoved(self, pos, user_id=None):
+    def send_mousemoved(self, pos, user_id=None, group_name=None):
         if user_id is None:
             user_id = self.user_id
+        if group_name is None:
+            group_name = self.group_name
 
         async_to_sync(self.channel_layer.group_send)(
-            self.group_name,
+            group_name,
             {
                 'type': 'mousemoved_type',
                 'userID': user_id,
@@ -122,12 +130,14 @@ class MouseConsumer(WebsocketConsumer):
 
         self.send(text_data=json.dumps(json_dump))
 
-    def send_drawsegment(self, nodes, user_id=None):
+    def send_drawsegment(self, nodes, user_id=None, group_name=None):
         if user_id is None:
             user_id = self.user_id
+        if group_name is None:
+            group_name = self.group_name
 
         async_to_sync(self.channel_layer.group_send)(
-            self.group_name,
+            group_name,
             {
                 'type': 'drawsegment_type',
                 'userID': user_id,
