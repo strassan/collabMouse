@@ -125,18 +125,18 @@
 				const height = window.innerHeight|| document.documentElement.clientHeight||
 				document.body.clientHeight;
 				
-				ctx.lineWidth = 6;
 				
 				var s = null;
 				
 				for (var i = 0; i < count; i++) {
 					s = data.list[i];
 					
-					ctx.strokeStyle = 'hsl('+ s.userID * 30 * Math.PI + ', 100%, 50%)';
 				
 					ctx.beginPath();
 					ctx.moveTo(s.startX*width, s.startY*height);
 					ctx.lineTo(s.endX*width, s.endY*height);
+					ctx.lineWidth = 6;
+					ctx.strokeStyle = 'hsl('+ s.userID * 30 * Math.PI + ', 100%, 50%)';
 					ctx.stroke();
 				}
 					
