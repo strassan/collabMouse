@@ -19,7 +19,6 @@
 	<canvas id="mouseCanv"></canvas>
 
     <script>
-        let mainDiv = document.getElementById('#mouses');
 		let users = new Set([]);
 		
 		
@@ -38,21 +37,6 @@
 		let myTestID = 3;
 
         let mouseSocket = null;
-
-		if (!noServer) {
-			mouseSocket = new WebSocket(
-				'ws://'
-				+ window.location.host
-				+ '/ws/mouse/'
-			)
-			
-
-			mouseSocket.onmessage = parseMsg;
-			
-			mouseSocket.onclose = function(e) {
-				console.error('Mouse socket closed unexpectedly');
-			};
-		}
 		
 		let parseMsg = function(e) {
             const data = JSON.parse(e.data);
@@ -100,6 +84,21 @@
 			}
             
         };
+
+		if (!noServer) {
+			mouseSocket = new WebSocket(
+				'ws://'
+				+ window.location.host
+				+ '/ws/mouse/'
+			)
+
+
+			mouseSocket.onmessage = parseMsg;
+
+			mouseSocket.onclose = function(e) {
+				console.error('Mouse socket closed unexpectedly');
+			};
+		}
 
         document.onmousemove = function (e) {
 
@@ -149,7 +148,13 @@
 					});
 				
 				} else {
-					// TODO send
+					mouseSocket.send(JSON.stringify({
+                        'evtType': 'newsegment',
+                        'startX': lastBMP[0],
+                        'startY': lastBMP[1],
+                        'endX': bufferMousePos[0],
+                        'endY': bufferMousePos[1]
+				    }));
 				}
 			}
 			
