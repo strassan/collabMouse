@@ -42,8 +42,7 @@ class MouseConsumer(WebsocketConsumer):
             self.send_mousemoved(pos=user['last_mouse_pos'], user_id=user['userID'], group_name=self.user_group_name)
         # send all current segments
         segments = getattr(self.channel_layer, self.group_name + '_segments', [])
-        for seg in segments:
-            self.send_drawsegment(nodes=seg['nodes'], user_id=seg['userID'], group_name=self.user_group_name)
+        self.send_dumpsegments(segments)
 
         self.accept()
 
@@ -166,6 +165,22 @@ class MouseConsumer(WebsocketConsumer):
     def clearall_type(self, event):
         json_dump = deepcopy(event)
         json_dump['evtType'] = 'clearall'
+        json_dump.pop('type', None)
+
+        self.send(text_data=json.dumps(json_dump))
+
+    def send_dumpsegments(self, segments):
+        async_to_sync(self.channel_layer.group_send)(
+            self.user_group_name,
+            {
+                'type': 'dumpsegments_type',
+                'list': segments,
+            }
+        )
+
+    def dumpsegments_type(self, event):
+        json_dump = deepcopy(event)
+        json_dump['evtType'] = 'dumpsegments'
         json_dump.pop('type', None)
 
         self.send(text_data=json.dumps(json_dump))
