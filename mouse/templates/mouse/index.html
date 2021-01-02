@@ -75,7 +75,7 @@
 		let parseMsg = function(e) {
             const data = JSON.parse(e.data);
 			
-			if (data.evtType == "mousemoved") {
+			if (data.evtType === "mousemoved") {
 				if (!users.has(data.userID)) {  // a new user joined
 				
 					let img = document.createElement('img');
@@ -99,7 +99,7 @@
 				cursor.style.top = 100 * data.posY  + '%';
 				cursor.style.left = 100 * data.posX + '%';
 				
-			} else if (data.evtType == "drawsegment") {
+			} else if (data.evtType === "drawsegment") {
 			
 				const width  = window.innerWidth || document.documentElement.clientWidth ||
 				document.body.clientWidth;
@@ -117,13 +117,13 @@
 				document.getElementById('segs').innerHTML = 'segments received = '+segs;
 				
 				
-			} else if (data.evtType == "clearall") {
+			} else if (data.evtType === "clearall") {
 				c.width = window.innerWidth;
 				c.height = window.innerHeight;
 				segs = 0;
 				segsCounter.innerHTML = 'segments received = '+segs;
 				
-			} else if (data.evtType == "dumpsegments") {
+			} else if (data.evtType === "dumpsegments") {
 				var count = data.list.length;
 				var segsCounter = document.getElementById('segs');
 					
@@ -150,7 +150,7 @@
 				segs = segs + count;
 				
 				segsCounter.innerHTML = 'segments received = '+segs;
-			} else if (data.evtType == "delmouse") {
+			} else if (data.evtType === "delmouse") {
 			
 				document.getElementById('cursor' + data.userID).remove();
 			
@@ -276,6 +276,33 @@
         }
 		
         setInterval(tickFunc, 100);
+
+        // handles touch events
+        function touchEventStartup() {
+            let c = document.getElementById("container");
+            c.addEventListener("touchstart", handleStartAndMove, false);
+            c.addEventListener("touchmove", handleStartAndMove, false);
+            c.addEventListener("touchcancel", handleCancelAndEnd, false);
+            c.addEventListener("touchend", handleCancelAndEnd, false);
+        }
+
+        document.addEventListener("DOMContentLoaded", touchEventStartup);
+
+        function handleStartAndMove(e) {
+            {#e.preventDefault();#}
+            drawing = true;
+            let touches = e.changedTouches;
+            const width  = window.innerWidth || document.documentElement.clientWidth ||
+            document.body.clientWidth;
+            const height = window.innerHeight|| document.documentElement.clientHeight||
+            document.body.clientHeight;
+            bufferMousePos = [touches[0].pageX/width, touches[0].pageY/height]
+        }
+
+        function handleCancelAndEnd(e) {
+            {#e.preventDefault();#}
+            drawing = false;
+        }
 
     </script>
 </body>
