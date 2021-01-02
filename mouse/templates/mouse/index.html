@@ -73,6 +73,8 @@
 		let segs = 0;
 
         let mouseSocket = null;
+
+        let segsCounter = document.getElementById('segs');
 		
 		let parseMsg = function(e) {
             const data = JSON.parse(e.data);
@@ -127,7 +129,6 @@
 				
 			} else if (data.evtType === "dumpsegments") {
 				var count = data.list.length;
-				var segsCounter = document.getElementById('segs');
 					
 				const width  = window.innerWidth || document.documentElement.clientWidth ||
 				document.body.clientWidth;
