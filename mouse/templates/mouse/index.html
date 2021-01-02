@@ -224,7 +224,7 @@
 
         tickFunc = function(a) {
 		
-			if (drawing && !(lastBMP == bufferMousePos)) {
+			if (drawing && !(lastBMP === bufferMousePos)) {
 			//if (drawing) {
 			
 				if (noServer) {
@@ -283,15 +283,15 @@
         // handles touch events
         function touchEventStartup() {
             let c = document.getElementById("container");
-            c.addEventListener("touchstart", handleStartAndMove, false);
-            c.addEventListener("touchmove", handleStartAndMove, false);
-            c.addEventListener("touchcancel", handleCancelAndEnd, false);
-            c.addEventListener("touchend", handleCancelAndEnd, false);
+            c.addEventListener("touchstart", handleTouchStart, false);
+            c.addEventListener("touchmove", handleTouchMove, false);
+            c.addEventListener("touchcancel", handleTouchCancelAndEnd, false);
+            c.addEventListener("touchend", handleTouchCancelAndEnd, false);
         }
 
         document.addEventListener("DOMContentLoaded", touchEventStartup);
 
-        function handleStartAndMove(e) {
+        function handleTouchStart(e) {
             e.preventDefault();
             let touches = e.changedTouches;
             const width  = window.innerWidth || document.documentElement.clientWidth ||
@@ -299,10 +299,22 @@
             const height = window.innerHeight|| document.documentElement.clientHeight||
             document.body.clientHeight;
             bufferMousePos = [touches[0].pageX/width, touches[0].pageY/height]
+            lastBMP = bufferMousePos  // this is after the new bufferMousePos on purpose, don't move it up!
+                // if it would be in front, sometimes a line gets drawn from the last mouse pos to the new touch
             drawing = true;
         }
 
-        function handleCancelAndEnd(e) {
+        function handleTouchMove(e) {
+            e.preventDefault();
+            let touches = e.changedTouches;
+            const width  = window.innerWidth || document.documentElement.clientWidth ||
+            document.body.clientWidth;
+            const height = window.innerHeight|| document.documentElement.clientHeight||
+            document.body.clientHeight;
+            bufferMousePos = [touches[0].pageX/width, touches[0].pageY/height]
+        }
+
+        function handleTouchCancelAndEnd(e) {
             e.preventDefault();
             drawing = false;
         }
