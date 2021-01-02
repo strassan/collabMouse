@@ -38,8 +38,12 @@
 		}
 		
 		canvas {
-			width: 100%; height: 100%; z-index: -10;
+			width: 100%; height: 100%;
 		}
+
+        #overlay {
+            z-index: 1;
+        }
 	</style>
 </head>
 <body>
@@ -282,7 +286,7 @@
 
         // handles touch events
         function touchEventStartup() {
-            let c = document.getElementById("container");
+            let c = document.getElementById("mouseCanv");
             c.addEventListener("touchstart", handleTouchStart, false);
             c.addEventListener("touchmove", handleTouchMove, false);
             c.addEventListener("touchcancel", handleTouchCancelAndEnd, false);
