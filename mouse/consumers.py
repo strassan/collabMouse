@@ -118,8 +118,12 @@ class MouseConsumer(WebsocketConsumer):
             self.send_drawsegment(nodes)
 
         elif event_type == 'clearall':
-            # remove all segments from channel_layer
-            delattr(self.channel_layer, self.group_name + '_segments')
+            segments = getattr(self.channel_layer, self.group_name + '_segments', [])
+            if len(segments) > 0:
+                # remove all segments from channel_layer
+                delattr(self.channel_layer, self.group_name + '_segments')
+            else:
+                pass
             self.send_clearall()
 
         else:
