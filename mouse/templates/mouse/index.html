@@ -291,18 +291,18 @@
         document.addEventListener("DOMContentLoaded", touchEventStartup);
 
         function handleStartAndMove(e) {
-            {#e.preventDefault();#}
-            drawing = true;
+            e.preventDefault();
             let touches = e.changedTouches;
             const width  = window.innerWidth || document.documentElement.clientWidth ||
             document.body.clientWidth;
             const height = window.innerHeight|| document.documentElement.clientHeight||
             document.body.clientHeight;
             bufferMousePos = [touches[0].pageX/width, touches[0].pageY/height]
+            drawing = true;
         }
 
         function handleCancelAndEnd(e) {
-            {#e.preventDefault();#}
+            e.preventDefault();
             drawing = false;
         }
 
