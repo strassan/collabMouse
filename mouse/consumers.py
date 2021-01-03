@@ -37,22 +37,7 @@ class MouseConsumer(WebsocketConsumer):
             self.channel_name
         )
 
-        # send all current users mouse positions
-        for user in connected_users:
-            self.send_mousemoved(pos=user['last_mouse_pos'], user_id=user['userID'], group_name=self.user_group_name)
-        # send all current segments
-        segments = getattr(self.channel_layer, self.group_name + '_segments', [])
-        segments_to_send = []
-        for seg in segments:
-            s = {
-                'userID': seg['userID'],
-                'startX': seg['nodes'][0][0],
-                'startY': seg['nodes'][0][1],
-                'endX': seg['nodes'][1][0],
-                'endY': seg['nodes'][1][1]
-            }
-            segments_to_send.append(s)
-        self.send_dumpsegments(segments_to_send)
+        self.send_dump()
 
         self.accept()
 
@@ -125,6 +110,9 @@ class MouseConsumer(WebsocketConsumer):
             else:
                 pass
             self.send_clearall()
+
+        elif event_type == 'requestdump':
+            self.send_dump()
 
         else:
             pass
@@ -214,3 +202,21 @@ class MouseConsumer(WebsocketConsumer):
         json_dump.pop('type', None)
 
         self.send(text_data=json.dumps(json_dump))
+
+    def send_dump(self):
+        connected_users = getattr(self.channel_layer, self.group_name + '_users', [])
+        for user in connected_users:
+            self.send_mousemoved(pos=user['last_mouse_pos'], user_id=user['userID'], group_name=self.user_group_name)
+        # send all current segments
+        segments = getattr(self.channel_layer, self.group_name + '_segments', [])
+        segments_to_send = []
+        for seg in segments:
+            s = {
+                'userID': seg['userID'],
+                'startX': seg['nodes'][0][0],
+                'startY': seg['nodes'][0][1],
+                'endX': seg['nodes'][1][0],
+                'endY': seg['nodes'][1][1]
+            }
+            segments_to_send.append(s)
+        self.send_dumpsegments(segments_to_send)
