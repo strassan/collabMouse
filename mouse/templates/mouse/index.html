@@ -208,6 +208,8 @@
 			c.width = window.innerWidth;
             c.height = window.innerHeight;
 			
+			segs = 0;
+			segsCounter.innerHTML = 'segments received = '+segs;
 			
 			mouseSocket.send(JSON.stringify({
 				'evtType': 'requestdump'
