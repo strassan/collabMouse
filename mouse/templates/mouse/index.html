@@ -24,7 +24,7 @@
 			margin: 0;
 			padding: 0;
 
-            touch-action: none;
+            /*touch-action: none;*/
 			
 			<!--
 			background-color: red;
@@ -232,60 +232,50 @@
 		
 
         tickFunc = function(a) {
-		
-			if (drawing && !(lastBMP === bufferMousePos)) {
-			//if (drawing) {
-			
-				if (noServer) {
-				
-					parseMsg({
-						'data': JSON.stringify({
-							'evtType': 'drawsegment',
-							'userID': myTestID,
+        	if (!(lastBMP === bufferMousePos)) {
+				if (drawing) {
+					if (noServer) {
+						parseMsg({
+							'data': JSON.stringify({
+								'evtType': 'drawsegment',
+								'userID': myTestID,
+								'startX': lastBMP[0],
+								'startY': lastBMP[1],
+								'endX': bufferMousePos[0],
+								'endY': bufferMousePos[1]
+							})
+						});
+					} else {
+						mouseSocket.send(JSON.stringify({
+							'evtType': 'newsegment',
 							'startX': lastBMP[0],
 							'startY': lastBMP[1],
 							'endX': bufferMousePos[0],
 							'endY': bufferMousePos[1]
+						}));
+					}
+				}
+
+				if (noServer) {
+					parseMsg({
+						'data': JSON.stringify({
+							'evtType': 'mousemoved',
+							'userID': myTestID,
+							'posX': bufferMousePos[0],
+							'posY': bufferMousePos[1]
 						})
 					});
-				
 				} else {
 					mouseSocket.send(JSON.stringify({
-                        'evtType': 'newsegment',
-                        'startX': lastBMP[0],
-                        'startY': lastBMP[1],
-                        'endX': bufferMousePos[0],
-                        'endY': bufferMousePos[1]
-				    }));
-				}
-			}
-			
-			
-			
-			
-			if (noServer) {
-			
-				parseMsg({
-					'data': JSON.stringify({
-						'evtType': 'mousemoved',
-						'userID': myTestID,
+						'evtType': 'mousepos',
 						'posX': bufferMousePos[0],
 						'posY': bufferMousePos[1]
-					})
-				});
-			
-			} else {
-				mouseSocket.send(JSON.stringify({
-					'evtType': 'mousepos',
-					'posX': bufferMousePos[0],
-					'posY': bufferMousePos[1]
-				}));
-			}
-			
-		
-			lastBMP = bufferMousePos;
+					}));
+				}
 
-        }
+				lastBMP = bufferMousePos;
+			}
+		}
 		
         setInterval(tickFunc, 100);
 
@@ -310,6 +300,11 @@
             bufferMousePos = [touches[0].pageX/width, touches[0].pageY/height]
             lastBMP = bufferMousePos  // this is after the new bufferMousePos on purpose, don't move it up!
                 // if it would be in front, sometimes a line gets drawn from the last mouse pos to the new touch
+            mouseSocket.send(JSON.stringify({
+				'evtType': 'mousepos',
+				'posX': bufferMousePos[0],
+				'posY': bufferMousePos[1]
+			}));
             drawing = true;
         }
 
