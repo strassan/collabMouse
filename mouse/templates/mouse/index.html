@@ -203,17 +203,15 @@
 			drawing = false;
 		}
 		
-		
+		let resized = false;
+
         window.addEventListener('resize', (e) => {
 			c.width = window.innerWidth;
             c.height = window.innerHeight;
 			
 			segs = 0;
 			segsCounter.innerHTML = 'segments received = '+segs;
-			
-			mouseSocket.send(JSON.stringify({
-				'evtType': 'requestdump'
-			}));
+			resized = true;
 		}, false);
 		
 		document.getElementById("clearBtn").addEventListener("click", (e) => {
@@ -280,6 +278,14 @@
 		}
 		
         setInterval(tickFunc, 100);
+        setInterval(()=>{
+        	if (resized) {
+        		mouseSocket.send(JSON.stringify({
+					'evtType': 'requestdump'
+				}));
+        		resized = false;
+			}
+		}, 500);
 
         // handles touch events
         function touchEventStartup() {
