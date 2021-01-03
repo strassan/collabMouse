@@ -207,6 +207,11 @@
         window.addEventListener('resize', (e) => {
 			c.width = window.innerWidth;
             c.height = window.innerHeight;
+			
+			
+			mouseSocket.send(JSON.stringify({
+				'evtType': 'requestdump'
+			}));
 		}, false);
 		
 		document.getElementById("clearBtn").addEventListener("click", (e) => {
